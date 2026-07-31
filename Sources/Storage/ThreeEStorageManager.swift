@@ -194,34 +194,125 @@ final class ThreeEStorageManager: ObservableObject {
     }
 
     private func updateRegistry(at root: URL) throws {
-        let registryURL = root.appendingPathComponent("System/registry.json")
-        var rootObject: [String: Any] = [
-            "schemaVersion": ThreeEAppIdentity.schemaVersion,
-            "apps": [String: Any]()
-        ]
+        let systemURL = root.appendingPathComponent("System", isDirectory: true)
+        let coordinator = NSFileCoordinator(filePresenter: nil)
+        var coordinationError: NSError?
+        var operationError: Error?
 
-        if fileManager.fileExists(atPath: registryURL.path) {
-            let data = try Data(contentsOf: registryURL)
-            if let existing = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                rootObject = existing
+        coordinator.coordinate(
+            writingItemAt: systemURL,
+            options: [],
+            error: &coordinationError
+        ) { coordinatedSystemURL in
+            do {
+                let registryURL = coordinatedSystemURL
+                    .appendingPathComponent("registry.json")
+                var rootObject: [String: Any]
+
+                if fileManager.fileExists(atPath: registryURL.path) {
+                    let data = try Data(contentsOf: registryURL)
+                    let json = try JSONSerialization.jsonObject(with: data)
+                    guard let existing = json as? [String: Any] else {
+                        throw ThreeEStorageError.invalidRegistryRoot
+                    }
+                    rootObject = existing
+                } else {
+                    rootObject = [
+                        "schemaVersion": ThreeEAppIdentity.schemaVersion,
+                        "apps": [String: Any]()
+                    ]
+                }
+
+                rootObject["schemaVersion"] = ThreeEAppIdentity.schemaVersion
+                var apps = try Self.normalizedRegistryApps(
+                    from: rootObject["apps"]
+                )
+                let appKey = ThreeEAppIdentity.appKey
+                var localEntry = apps[appKey] ?? [:]
+
+                localEntry["appKey"] = appKey
+                localEntry["displayName"] = ThreeEAppIdentity.displayName
+                localEntry["bundleIdentifier"] = ThreeEAppIdentity.bundleIdentifier
+                localEntry["urlScheme"] = ThreeEAppIdentity.urlScheme
+                localEntry["folder"] = ThreeEAppIdentity.relativeFolderPath
+                localEntry["supportedExtensions"] = [
+                    "html", "htm", "css", "js", "json", "wasm",
+                    "svg", "png", "jpg", "jpeg", "gif", "webp",
+                    "mp3", "mp4", "webm", "zip"
+                ]
+                localEntry["lastRegisteredAt"] = ISO8601DateFormatter()
+                    .string(from: Date())
+
+                apps[appKey] = localEntry
+                rootObject["apps"] = apps
+
+                let data = try JSONSerialization.data(
+                    withJSONObject: rootObject,
+                    options: [
+                        .prettyPrinted,
+                        .sortedKeys,
+                        .withoutEscapingSlashes
+                    ]
+                )
+                try data.write(to: registryURL, options: .atomic)
+            } catch {
+                operationError = error
             }
         }
 
-        rootObject["schemaVersion"] = ThreeEAppIdentity.schemaVersion
-        var apps = rootObject["apps"] as? [String: Any] ?? [:]
-        apps[ThreeEAppIdentity.appKey] = [
-            "appKey": ThreeEAppIdentity.appKey,
-            "displayName": ThreeEAppIdentity.displayName,
-            "bundleIdentifier": ThreeEAppIdentity.bundleIdentifier,
-            "urlScheme": ThreeEAppIdentity.urlScheme,
-            "folder": ThreeEAppIdentity.relativeFolderPath,
-            "supportedExtensions": ["html", "htm", "css", "js", "json", "wasm", "svg", "png", "jpg", "jpeg", "gif", "webp", "mp3", "mp4", "webm", "zip"],
-            "lastRegisteredAt": ISO8601DateFormatter().string(from: Date())
-        ]
-        rootObject["apps"] = apps
+        if let coordinationError {
+            throw coordinationError
+        }
+        if let operationError {
+            throw operationError
+        }
+    }
 
-        let data = try JSONSerialization.data(withJSONObject: rootObject, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
-        try data.write(to: registryURL, options: .atomic)
+    /// Supports both the original array form and the canonical dictionary
+    /// form used by the 3E suite. The next write always uses the dictionary.
+    private static func normalizedRegistryApps(
+        from rawValue: Any?
+    ) throws -> [String: [String: Any]] {
+        guard let rawValue else {
+            return [:]
+        }
+
+        if let dictionary = rawValue as? [String: Any] {
+            var result: [String: [String: Any]] = [:]
+
+            for (dictionaryKey, rawEntry) in dictionary {
+                guard var entry = rawEntry as? [String: Any] else {
+                    throw ThreeEStorageError.invalidRegistryApps
+                }
+
+                let storedKey = (entry["appKey"] as? String)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                let appKey = (storedKey?.isEmpty == false)
+                    ? storedKey!
+                    : dictionaryKey
+                entry["appKey"] = appKey
+                result[appKey] = entry
+            }
+
+            return result
+        }
+
+        if let array = rawValue as? [[String: Any]] {
+            var result: [String: [String: Any]] = [:]
+
+            for entry in array {
+                guard let appKey = (entry["appKey"] as? String)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines),
+                    !appKey.isEmpty else {
+                    throw ThreeEStorageError.invalidRegistryApps
+                }
+                result[appKey] = entry
+            }
+
+            return result
+        }
+
+        throw ThreeEStorageError.invalidRegistryApps
     }
 
     private static let sampleHTML = """

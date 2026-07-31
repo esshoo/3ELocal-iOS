@@ -116,3 +116,8 @@ group.com.essam.3e
 ## توليد مشروع Xcode
 
 المستودع يستخدم [XcodeGen](https://github.com/yonaskolb/XcodeGen). يقوم GitHub Actions بتثبيته وإنشاء `ThreeELocal.xcodeproj` تلقائيًا من `project.yml`، لذلك لا تحتاج إلى جهاز Mac لرفع المشروع أو تشغيل عملية البناء.
+
+
+## Registry compatibility
+
+Version 0.1.2 accepts both `apps` array and app-keyed dictionary formats in `System/registry.json`. It preserves all known and unknown app records and writes the canonical dictionary form.
