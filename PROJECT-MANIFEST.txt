@@ -1,0 +1,7 @@
+3ELocal iOS source package
+Bundle ID: com.essam.3E.localweb
+URL Scheme: localweb://
+Future App Group: group.com.essam.3e
+Minimum iOS: 16.0
+Swift files: 18
+Generated: 2026-07-31

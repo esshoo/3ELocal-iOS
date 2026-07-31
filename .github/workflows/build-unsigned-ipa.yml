@@ -1,0 +1,83 @@
+name: Build Unsigned IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - "Sources/**"
+      - "Supporting/**"
+      - "project.yml"
+      - "scripts/**"
+      - ".github/workflows/build-unsigned-ipa.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build 3ELocal
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Install XcodeGen
+        run: |
+          brew update
+          brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate --spec project.yml
+
+      - name: Validate generated project
+        run: |
+          xcodebuild -project ThreeELocal.xcodeproj -scheme ThreeELocal -list
+          plutil -lint Supporting/Info.plist
+
+      - name: Build unsigned device app
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project ThreeELocal.xcodeproj \
+            -scheme ThreeELocal \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath "$GITHUB_WORKSPACE/build/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            clean build | tee "$GITHUB_WORKSPACE/build/xcodebuild.log"
+
+      - name: Package unsigned IPA
+        run: bash scripts/package_unsigned_ipa.sh
+
+      - name: Write build information
+        run: |
+          mkdir -p build/output
+          {
+            echo "App: 3ELocal"
+            echo "Bundle ID: com.essam.3E.localweb"
+            echo "URL Scheme: localweb://"
+            echo "Commit: $GITHUB_SHA"
+            echo "Runner: $RUNNER_OS $RUNNER_ARCH"
+            xcodebuild -version
+          } > build/output/BUILD-INFO.txt
+          cp build/xcodebuild.log build/output/xcodebuild.log
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3ELocal-unsigned-ipa
+          path: |
+            build/output/3ELocal-unsigned.ipa
+            build/output/BUILD-INFO.txt
+            build/output/xcodebuild.log
+          if-no-files-found: error
+          retention-days: 30
