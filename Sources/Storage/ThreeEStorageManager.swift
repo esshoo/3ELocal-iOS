@@ -16,12 +16,6 @@ final class ThreeEStorageManager: ObservableObject {
         restoreSavedFolder()
     }
 
-    deinit {
-        if longLivedAccessActive {
-            rootURL?.stopAccessingSecurityScopedResource()
-        }
-    }
-
     var appsURL: URL? { rootURL?.appendingPathComponent("Apps", isDirectory: true) }
     var appFolderURL: URL? { appsURL?.appendingPathComponent(ThreeEAppIdentity.folderName, isDirectory: true) }
     var projectsURL: URL? { appFolderURL?.appendingPathComponent("Projects", isDirectory: true) }
