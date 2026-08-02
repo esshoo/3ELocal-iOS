@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "com.essam.3eweb.hello",
+  "name": "Hello 3E",
+  "version": "1.1.0",
+  "description": "الإصدار الثاني لاختبار التحديث والرجوع مع الاحتفاظ ببيانات التطبيق.",
+  "icon": "icon.png",
+  "entry": "www/index.html",
+  "type": "local",
+  "minimumRuntimeVersion": "0.2.0"
+}

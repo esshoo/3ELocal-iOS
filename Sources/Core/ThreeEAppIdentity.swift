@@ -9,6 +9,7 @@ enum ThreeEAppIdentity {
     static let urlScheme = "localweb"
     static let futureAppGroupIdentifier = "group.com.essam.3e"
     static let schemaVersion = 1
+    static let runtimeVersion = "0.2.0"
 }
 
 enum ThreeEApp: String, CaseIterable, Codable {

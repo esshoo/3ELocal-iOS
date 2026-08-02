@@ -6,6 +6,9 @@ final class ThreeEStorageManager: ObservableObject {
     @Published private(set) var rootURL: URL?
     @Published private(set) var isConnected = false
     @Published private(set) var projects: [WebProject] = []
+    @Published private(set) var installedWebApps: [InstalledWebApp] = []
+    @Published private(set) var isInstallingWebApp = false
+    @Published var operationMessage: String?
     @Published var errorMessage: String?
 
     private let bookmarkKey = "3e.selectedRootFolderBookmark.v1"
@@ -19,6 +22,10 @@ final class ThreeEStorageManager: ObservableObject {
     var appsURL: URL? { rootURL?.appendingPathComponent("Apps", isDirectory: true) }
     var appFolderURL: URL? { appsURL?.appendingPathComponent(ThreeEAppIdentity.folderName, isDirectory: true) }
     var projectsURL: URL? { appFolderURL?.appendingPathComponent("Projects", isDirectory: true) }
+    var installedWebAppsURL: URL? { appFolderURL?.appendingPathComponent("InstalledApps", isDirectory: true) }
+    var packagesURL: URL? { appFolderURL?.appendingPathComponent("Packages", isDirectory: true) }
+    var downloadsURL: URL? { appFolderURL?.appendingPathComponent("Downloads", isDirectory: true) }
+    var temporaryWebAppsURL: URL? { appFolderURL?.appendingPathComponent("Cache/WebAppInstaller", isDirectory: true) }
     var sharedURL: URL? { rootURL?.appendingPathComponent("Shared", isDirectory: true) }
     var sharedProjectsURL: URL? { sharedURL?.appendingPathComponent("Projects", isDirectory: true) }
     var systemURL: URL? { rootURL?.appendingPathComponent("System", isDirectory: true) }
@@ -43,7 +50,7 @@ final class ThreeEStorageManager: ObservableObject {
             try prepareThreeEStructure(at: selectedFolderURL)
             isConnected = true
             errorMessage = nil
-            refreshProjects()
+            refreshAll()
         } catch {
             stopLongLivedAccess()
             rootURL = nil
@@ -82,7 +89,7 @@ final class ThreeEStorageManager: ObservableObject {
                 UserDefaults.standard.set(renewed, forKey: bookmarkKey)
             }
 
-            refreshProjects()
+            refreshAll()
         } catch {
             stopLongLivedAccess()
             rootURL = nil
@@ -96,8 +103,80 @@ final class ThreeEStorageManager: ObservableObject {
         stopLongLivedAccess()
         rootURL = nil
         projects = []
+        installedWebApps = []
         isConnected = false
         errorMessage = nil
+    }
+
+    func refreshAll() {
+        refreshProjects()
+        refreshInstalledWebApps()
+    }
+
+    func refreshInstalledWebApps() {
+        guard isConnected, let installedWebAppsURL else {
+            installedWebApps = []
+            return
+        }
+
+        do {
+            installedWebApps = try WebAppPackageInstaller.scanInstalledApps(in: installedWebAppsURL)
+        } catch {
+            errorMessage = "تعذر قراءة التطبيقات المثبتة: \(error.localizedDescription)"
+        }
+    }
+
+    func installWebAppPackage(from packageURL: URL) {
+        guard let installedWebAppsURL, let temporaryWebAppsURL else {
+            errorMessage = ThreeEStorageError.folderNotConnected.localizedDescription
+            return
+        }
+
+        isInstallingWebApp = true
+        operationMessage = nil
+        errorMessage = nil
+
+        do {
+            let outcome = try WebAppPackageInstaller.install(
+                packageURL: packageURL,
+                installedAppsRoot: installedWebAppsURL,
+                temporaryRoot: temporaryWebAppsURL
+            )
+            refreshInstalledWebApps()
+
+            switch outcome.kind {
+            case .installed:
+                operationMessage = "تم تثبيت \(outcome.app.name) بنجاح."
+            case .updated(let previousVersion):
+                operationMessage = "تم تحديث \(outcome.app.name) من \(previousVersion) إلى \(outcome.app.version) مع الاحتفاظ بالبيانات."
+            case .reinstalled:
+                operationMessage = "تمت إعادة تثبيت \(outcome.app.name) إصدار \(outcome.app.version)."
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+
+        isInstallingWebApp = false
+    }
+
+    func uninstallWebApp(_ app: InstalledWebApp) {
+        do {
+            try WebAppPackageInstaller.uninstall(app)
+            refreshInstalledWebApps()
+            operationMessage = "تم حذف \(app.name) وبياناته المحلية."
+        } catch {
+            errorMessage = "تعذر حذف التطبيق: \(error.localizedDescription)"
+        }
+    }
+
+    func rollbackWebApp(_ app: InstalledWebApp) {
+        do {
+            let rolledBack = try WebAppPackageInstaller.rollback(app)
+            refreshInstalledWebApps()
+            operationMessage = "تم الرجوع بـ \(rolledBack.name) إلى الإصدار \(rolledBack.version)."
+        } catch {
+            errorMessage = "تعذر الرجوع إلى الإصدار السابق: \(error.localizedDescription)"
+        }
     }
 
     func refreshProjects() {
@@ -171,6 +250,9 @@ final class ThreeEStorageManager: ObservableObject {
             "Apps/RoomElectrical",
             "Apps/LocalWeb",
             "Apps/LocalWeb/Projects",
+            "Apps/LocalWeb/InstalledApps",
+            "Apps/LocalWeb/Packages",
+            "Apps/LocalWeb/Downloads",
             "Apps/LocalWeb/Imports",
             "Apps/LocalWeb/Exports",
             "Apps/LocalWeb/Cache",
@@ -238,7 +320,7 @@ final class ThreeEStorageManager: ObservableObject {
                 localEntry["supportedExtensions"] = [
                     "html", "htm", "css", "js", "json", "wasm",
                     "svg", "png", "jpg", "jpeg", "gif", "webp",
-                    "mp3", "mp4", "webm", "zip"
+                    "mp3", "mp4", "webm", "zip", "3eweb"
                 ]
                 localEntry["lastRegisteredAt"] = ISO8601DateFormatter()
                     .string(from: Date())

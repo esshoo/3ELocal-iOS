@@ -20,7 +20,7 @@ final class LocalHTTPServer: ObservableObject {
     private var rootURL: URL?
     private var initialRelativePath = "index.html"
 
-    func start(projectRoot: URL, indexURL: URL) {
+    func start(projectRoot: URL, indexURL: URL, preferredPort: UInt16? = nil) {
         stop()
 
         rootURL = projectRoot.standardizedFileURL.resolvingSymlinksInPath()
@@ -28,7 +28,13 @@ final class LocalHTTPServer: ObservableObject {
         publish { self.state = .starting }
 
         do {
-            let listener = try NWListener(using: .tcp, on: .any)
+            let endpointPort: NWEndpoint.Port
+            if let preferredPort, let requestedPort = NWEndpoint.Port(rawValue: preferredPort) {
+                endpointPort = requestedPort
+            } else {
+                endpointPort = .any
+            }
+            let listener = try NWListener(using: .tcp, on: endpointPort)
             self.listener = listener
 
             listener.newConnectionHandler = { [weak self] connection in
@@ -82,6 +88,16 @@ final class LocalHTTPServer: ObservableObject {
                 self.networkURL = nil
             }
         }
+    }
+
+
+    static func stablePort(for identifier: String) -> UInt16 {
+        var hash: UInt32 = 2_166_136_261
+        for byte in identifier.utf8 {
+            hash ^= UInt32(byte)
+            hash &*= 16_777_619
+        }
+        return UInt16(20_000 + (hash % 25_000))
     }
 
     func stop() {
@@ -277,7 +293,7 @@ final class LocalHTTPServer: ObservableObject {
         case "html", "htm": return "text/html; charset=utf-8"
         case "css": return "text/css; charset=utf-8"
         case "js", "mjs": return "text/javascript; charset=utf-8"
-        case "json", "map": return "application/json; charset=utf-8"
+        case "json", "map", "webmanifest": return "application/json; charset=utf-8"
         case "wasm": return "application/wasm"
         case "svg": return "image/svg+xml"
         case "png": return "image/png"

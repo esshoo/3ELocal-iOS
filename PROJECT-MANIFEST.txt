@@ -3,5 +3,9 @@ Bundle ID: com.essam.3E.localweb
 URL Scheme: localweb://
 Future App Group: group.com.essam.3e
 Minimum iOS: 16.0
-Swift files: 18
-Generated: 2026-07-31
+Swift files: 26
+Generated: 2026-08-02
+
+Runtime version: 0.2.0-M01
+Installable web app format: .3eweb
+ZIP engine: ZIPFoundation 0.9.20

@@ -6,7 +6,7 @@ struct RootView: View {
     var body: some View {
         Group {
             if storage.isConnected {
-                ProjectLibraryView()
+                MainTabView()
             } else {
                 OnboardingView()
             }

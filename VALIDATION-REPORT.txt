@@ -1,0 +1,19 @@
+3ELocal v0.2.0-M01 validation report
+Date: 2026-08-02
+
+Completed checks:
+- Uploaded v0.1.2 source archive extracted successfully.
+- All Swift source files passed `swiftc -frontend -parse` with Swift 6.2.1.
+- project.yml parsed successfully as YAML.
+- Supporting/Info.plist passed plutil validation.
+- Custom .3eweb UTI and document type are present.
+- Both sample .3eweb files are valid ZIP archives.
+- Both sample manifests decode as JSON and reference existing entry/icon files.
+- Repository validation script completed successfully.
+- Archive traversal, symlink, size, entry-count, executable-type, manifest, runtime, entry and icon checks are implemented.
+
+Not performed in this Linux environment:
+- Full Xcode/iPhoneOS compilation.
+- Runtime installation on a physical iPhone.
+
+The included GitHub Actions workflow is the required next build validation. It will resolve ZIPFoundation through Swift Package Manager and build the unsigned IPA using Xcode on macOS.

@@ -13,7 +13,11 @@ struct ThreeELocalApp: App {
                 .environmentObject(library)
                 .environmentObject(router)
                 .onOpenURL { url in
-                    router.handle(url)
+                    if url.isFileURL && url.pathExtension.lowercased() == "3eweb" {
+                        storage.installWebAppPackage(from: url)
+                    } else {
+                        router.handle(url)
+                    }
                 }
         }
     }

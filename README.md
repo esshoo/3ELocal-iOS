@@ -121,3 +121,89 @@ group.com.essam.3e
 ## Registry compatibility
 
 Version 0.1.2 accepts both `apps` array and app-keyed dictionary formats in `System/registry.json`. It preserves all known and unknown app records and writes the canonical dictionary form.
+
+# 3E Web Apps — v0.2.0-M01
+
+يحتفظ هذا الإصدار بكل وظائف المشاريع المحلية السابقة، ويضيف نوعًا جديدًا هو **التطبيق المثبت**.
+
+## الفرق بين المشروع والتطبيق المثبت
+
+- المشروع المحلي: مجلد تطوير داخل `Apps/LocalWeb/Projects` أو `Shared/Projects` يحتوي على `index.html`.
+- التطبيق المثبت: حزمة ZIP منظمة بامتداد `.3eweb` تحتوي على هوية وإصدار وأيقونة وملف بداية.
+
+## بنية حزمة `.3eweb`
+
+```text
+MyApp.3eweb
+├── manifest.json
+├── icon.png
+└── www/
+    ├── index.html
+    ├── app.js
+    ├── style.css
+    └── assets/
+```
+
+مثال `manifest.json`:
+
+```json
+{
+  "schemaVersion": 1,
+  "id": "com.essam.3eweb.myapp",
+  "name": "My App",
+  "version": "1.0.0",
+  "description": "تطبيق ويب محلي",
+  "icon": "icon.png",
+  "entry": "www/index.html",
+  "type": "local",
+  "minimumRuntimeVersion": "0.2.0"
+}
+```
+
+## التخزين بعد التثبيت
+
+```text
+3E/Apps/LocalWeb/InstalledApps/
+└── com.essam.3eweb.myapp/
+    ├── app-info.json
+    ├── Versions/
+    │   ├── 1.0.0/
+    │   └── 1.1.0/
+    ├── Data/
+    ├── Documents/
+    ├── Cache/
+    └── Backups/
+```
+
+تحديث الحزمة يستبدل ملفات الإصدار النشط فقط، ولا يحذف `Data` أو `Documents`.
+
+## اختبار المرحلة الأولى
+
+داخل `TestPackages` توجد حزمتان:
+
+```text
+Hello3E-v1.0.0.3eweb
+Hello3E-v1.1.0.3eweb
+```
+
+خطوات الاختبار:
+
+1. ثبّت `Hello3E-v1.0.0.3eweb` من تبويب **التطبيقات**.
+2. افتح التطبيق واضغط زر زيادة العداد عدة مرات.
+3. ثبّت `Hello3E-v1.1.0.3eweb`؛ سيظهر كتحديث لنفس التطبيق.
+4. افتحه وتأكد أن قيمة العداد بقيت كما هي.
+5. اضغط مطولًا على بطاقة التطبيق واختر **الرجوع للإصدار السابق**.
+6. اختبر الحذف وتأكد من اختفاء مجلد التطبيق وبياناته.
+
+## إنشاء الحزم التجريبية مجددًا
+
+```bash
+python3 scripts/build_sample_3eweb.py
+```
+
+## حدود المرحلة الحالية
+
+- النوع المدعوم حاليًا في الحزم هو `local` فقط.
+- تطبيقات الروابط البعيدة والتنزيل من متجر 3E ستضاف في المراحل التالية.
+- لا يوجد JavaScript-to-Swift bridge في هذه المرحلة.
+- ملفات React/Vue/Vite يجب بناؤها أولًا، ثم وضع ملفات `dist` داخل الحزمة.
