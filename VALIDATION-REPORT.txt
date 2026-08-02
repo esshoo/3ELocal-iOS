@@ -1,25 +1,40 @@
-3ELocal v0.2.0-M02 validation report
-Date: 2026-08-02
+3ELocal v0.2.0-M03 Validation Report
+Generated: 2026-08-02
 
-Completed checks:
-- M01 source copied without changing the fixed Bundle ID or URL scheme.
-- Existing `.3eweb` sample packages remain valid ZIP archives.
-- Existing local package manifests remain backward-compatible after optional M02 fields were added.
-- A pre-M02 installed-app JSON record was decoded in a standalone Swift compatibility check; missing launch-history fields correctly decode as nil.
-- All 32 Swift source files passed `swiftc -frontend -parse` with Swift 6.2.1.
-- Supporting/Info.plist passed the repository validation checks.
-- The repository validation script completed successfully.
-- Remote application validation requires HTTPS, a valid host, a safe identifier and valid allowed domains.
-- Remote metadata retrieval is size-limited and only follows HTTPS manifest/icon resources.
-- Navigation policies cover same-host, declared-domain and unrestricted modes.
-- Existing local apps continue to use the default WebKit store, preserving the M01 localStorage origin.
-- Remote apps use deterministic per-app persistent WebKit stores on iOS 17 and newer.
-- Pending `.3eweb` imports are copied to app support storage when the shared 3E folder is not connected.
-- Build number increased from 4 to 5.
+Identity
+- Display Name: 3ELocal
+- Bundle ID: com.essam.3E.localweb
+- URL Scheme: localweb://
+- Runtime: 0.2.0-M03
+- Build number: 6
+- Minimum iOS: 16.0
 
-Not performed in this Linux environment:
-- Full Xcode/iPhoneOS compilation.
-- Runtime testing of WKWebsiteDataStore profiles on a physical iPhone.
-- Live metadata discovery against every possible website implementation.
+Implemented M03 scope
+- Direct HTTPS .3eweb downloads.
+- Progress, pause, resume, cancellation and retry controls.
+- Completed download rediscovery after relaunch.
+- QR scanning for direct package links.
+- Private catalog.json parsing with relative HTTPS URL resolution.
+- Installed/available version comparison.
+- Exact-version ignore state.
+- Downloaded packages routed through the existing safe package validator.
+- localweb://install and localweb://catalog deep links.
+- Hello3E 1.2.0 and publishable TestCatalog fixtures.
 
-The included GitHub Actions workflow remains the required device-build validation step.
+Checks completed
+- Info.plist parsed and linted successfully.
+- Camera usage description is present.
+- project.yml and GitHub Actions YAML parsed successfully.
+- 38 Swift source files passed swiftc frontend syntax parsing.
+- Repository validation script passed.
+- Hello3E 1.0.0, 1.1.0 and 1.2.0 ZIP archives passed integrity checks.
+- Every sample manifest entry and icon exists in its package.
+- TestCatalog JSON parsed and its relative package/icon URLs resolved under HTTPS.
+- TestCatalog package bytes match the standalone Hello3E 1.2.0 test package.
+- No files are removed relative to M02.
+
+Not performed in this environment
+- Full iphoneos compilation and linking, because the working environment does not contain Xcode or the iOS SDK.
+- Runtime camera, network, URLSession resume-data and WKWebView testing on a physical iPhone.
+
+Final build verification must be performed by the included GitHub Actions workflow and the M03 device test plan.

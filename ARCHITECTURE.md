@@ -48,3 +48,15 @@ Storage resolution order planned for all three apps:
 - Disallowed user-activated links are handed to the system browser.
 - On iOS 17 and newer, each remote app uses a deterministic persistent `WKWebsiteDataStore` identifier.
 - On iOS 16, normal web-origin isolation applies through the default persistent data store.
+
+
+## Online package delivery — M03
+
+- `WebAppDownloadManager` downloads only HTTPS package URLs using `URLSessionDownloadTask`.
+- Active downloads expose progress, pause, resume, cancel and retry state.
+- Completed package files remain under `Apps/LocalWeb/Downloads` and are rediscovered on the next launch.
+- Download completion never bypasses package validation; installation still flows through `WebAppPackageInstaller`.
+- `catalog.json` is treated as untrusted remote data and is limited to schema version 1, 500 unique app identifiers and valid HTTPS-resolvable package URLs.
+- Catalog links may be relative to the catalog document, allowing one folder to be hosted on GitHub Raw, GitHub Pages or another HTTPS server.
+- Ignored update versions are stored locally by app identifier and exact version.
+- QR scanning only returns text to the direct-download form; the resulting URL must still pass HTTPS validation.

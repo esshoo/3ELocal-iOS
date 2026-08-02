@@ -4,8 +4,11 @@ import UIKit
 struct InstalledWebAppCardView: View {
     let app: InstalledWebApp
     let isOnline: Bool
+    let availableUpdate: WebAppCatalogEntry?
     let open: () -> Void
     let details: () -> Void
+    let downloadUpdate: () -> Void
+    let ignoreUpdate: () -> Void
     let rollback: () -> Void
     let uninstall: () -> Void
 
@@ -24,6 +27,11 @@ struct InstalledWebAppCardView: View {
                         Text("v\(app.version)")
                             .font(.caption.monospaced())
                             .foregroundStyle(.secondary)
+                    }
+                    if let availableUpdate {
+                        Label("تحديث v\(availableUpdate.version)", systemImage: "arrow.down.circle.fill")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.blue)
                     }
                 }
             }
@@ -54,6 +62,14 @@ struct InstalledWebAppCardView: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.blue)
                 Spacer()
+                if availableUpdate != nil {
+                    Button(action: downloadUpdate) {
+                        Image(systemName: "arrow.down.circle")
+                            .font(.title3)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("تنزيل التحديث")
+                }
                 Button(action: details) {
                     Image(systemName: "info.circle")
                         .font(.title3)
@@ -77,6 +93,14 @@ struct InstalledWebAppCardView: View {
             }
             Button(action: details) {
                 Label("التفاصيل", systemImage: "info.circle")
+            }
+            if let availableUpdate {
+                Button(action: downloadUpdate) {
+                    Label("تنزيل التحديث \(availableUpdate.version)", systemImage: "arrow.down.circle")
+                }
+                Button(action: ignoreUpdate) {
+                    Label("تجاهل هذا الإصدار", systemImage: "eye.slash")
+                }
             }
             if app.isLocal, app.previousVersion != nil {
                 Button(action: rollback) {

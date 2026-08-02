@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.0-M03 — Online Packages and Private Catalog
+
+- Added direct HTTPS `.3eweb` package downloads with progress display.
+- Added pause, resume, cancel and retry controls using URLSession resume data when supported by the server.
+- Added persistent discovery of completed package files in `Apps/LocalWeb/Downloads` after relaunch.
+- Added QR scanning for package links with an explicit camera permission description.
+- Added a private `catalog.json` format with relative package and icon URLs.
+- Added catalog search, runtime compatibility checks and manual refresh.
+- Added installed-versus-available version comparison and update badges.
+- Added ignored-version state that persists per app and only hides the selected version.
+- Added safe install-after-download through the existing `.3eweb` validator.
+- Added `localweb://install?url=` and `localweb://catalog?url=` deep links.
+- Added the Hello3E 1.2.0 online-update test package and a publishable test catalog.
+- Increased the internal build number to 6.
+
 ## 0.2.0-M02 — Remote Web Apps
 
 - Added remote web applications that run from HTTPS URLs without downloading the website.

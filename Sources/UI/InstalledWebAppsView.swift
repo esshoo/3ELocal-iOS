@@ -49,6 +49,18 @@ struct InstalledWebAppsView: View {
                             }
                             .pickerStyle(.segmented)
 
+                            if storage.availableUpdateCount > 0 {
+                                Label(
+                                    "يتوفر \(storage.availableUpdateCount) تحديث في متجر 3E",
+                                    systemImage: "arrow.down.circle.fill"
+                                )
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.blue)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(12)
+                                .background(Color.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 14))
+                            }
+
                             if filteredApps.isEmpty {
                                 VStack(spacing: 12) {
                                     Image(systemName: "magnifyingglass")
@@ -67,8 +79,19 @@ struct InstalledWebAppsView: View {
                                         InstalledWebAppCardView(
                                             app: app,
                                             isOnline: network.isOnline,
+                                            availableUpdate: storage.availableUpdate(for: app),
                                             open: { open(app) },
                                             details: { detailsApp = currentApp(withID: app.id) ?? app },
+                                            downloadUpdate: {
+                                                if let entry = storage.availableUpdate(for: app) {
+                                                    storage.downloadCatalogEntry(entry)
+                                                }
+                                            },
+                                            ignoreUpdate: {
+                                                if let entry = storage.availableUpdate(for: app) {
+                                                    storage.ignoreUpdate(appID: app.id, version: entry.version)
+                                                }
+                                            },
                                             rollback: { storage.rollbackWebApp(app) },
                                             uninstall: { appPendingDeletion = app }
                                         )

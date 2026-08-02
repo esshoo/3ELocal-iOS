@@ -22,7 +22,7 @@
 - Add app details, storage size and launch-history information.
 - Improve Files-app package intake before and after folder connection.
 
-## M03 — Online package downloads
+## M03 — Online package downloads — implemented in 0.2.0 build 6
 
 - Download `.3eweb` packages with URLSession.
 - Install from direct links and QR codes.

@@ -26,6 +26,7 @@ struct WebAppManifest: Codable, Hashable {
     let startURL: String?
     let type: AppType
     let minimumRuntimeVersion: String?
+    let updateURL: String?
     let navigationPolicy: NavigationPolicy?
     let allowedDomains: [String]?
 
@@ -40,6 +41,7 @@ struct WebAppManifest: Codable, Hashable {
         case startURL
         case type
         case minimumRuntimeVersion
+        case updateURL
         case navigationPolicy
         case allowedDomains
     }
@@ -71,6 +73,14 @@ struct InstalledWebApp: Identifiable, Hashable {
     var allowedDomains: [String] { record.activeManifest.allowedDomains ?? [] }
     var isRemote: Bool { appType == .remote }
     var isLocal: Bool { appType == .local }
+
+    var declaredUpdateURL: URL? {
+        guard let raw = record.activeManifest.updateURL,
+              let url = URL(string: raw),
+              url.scheme?.lowercased() == "https",
+              url.host != nil else { return nil }
+        return url
+    }
 
     var activePackageURL: URL {
         containerURL

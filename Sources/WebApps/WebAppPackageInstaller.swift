@@ -317,6 +317,14 @@ enum WebAppPackageInstaller {
             )
         }
 
+        if let updateURL = manifest.updateURL {
+            guard let url = URL(string: updateURL),
+                  url.scheme?.lowercased() == "https",
+                  url.host != nil else {
+                throw WebAppPackageError.invalidManifest("رابط التحديث يجب أن يستخدم HTTPS.")
+            }
+        }
+
         switch manifest.type {
         case .local:
             guard let entry = manifest.entry,

@@ -49,6 +49,8 @@
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>يستخدم 3ELocal الشبكة المحلية لعرض مشاريع الويب على أجهزتك الأخرى أثناء وجودها على الشبكة نفسها.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>يستخدم 3ELocal الكاميرا لمسح رموز QR التي تحتوي على روابط حزم تطبيقات الويب.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

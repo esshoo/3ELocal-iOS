@@ -78,6 +78,7 @@ enum RemoteWebAppInstaller {
             startURL: url.absoluteString,
             type: .remote,
             minimumRuntimeVersion: ThreeEAppIdentity.runtimeVersion,
+            updateURL: nil,
             navigationPolicy: draft.navigationPolicy,
             allowedDomains: domains.sorted()
         )
