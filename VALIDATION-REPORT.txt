@@ -1,40 +1,22 @@
-3ELocal v0.2.0-M03 Validation Report
-Generated: 2026-08-02
+3ELocal M04 Validation Report
+Generated: 2026-08-02T20:00:52.610301+00:00
 
-Identity
-- Display Name: 3ELocal
-- Bundle ID: com.essam.3E.localweb
-- URL Scheme: localweb://
-- Runtime: 0.2.0-M03
-- Build number: 6
-- Minimum iOS: 16.0
+Version: 0.2.0-M04
+Build: 7
+Swift files parsed: 40
 
-Implemented M03 scope
-- Direct HTTPS .3eweb downloads.
-- Progress, pause, resume, cancellation and retry controls.
-- Completed download rediscovery after relaunch.
-- QR scanning for direct package links.
-- Private catalog.json parsing with relative HTTPS URL resolution.
-- Installed/available version comparison.
-- Exact-version ignore state.
-- Downloaded packages routed through the existing safe package validator.
-- localweb://install and localweb://catalog deep links.
-- Hello3E 1.2.0 and publishable TestCatalog fixtures.
+Checks completed:
+- All Swift files pass swiftc frontend parse.
+- Info.plist and all JSON files parsed successfully.
+- Repository structure check passed.
+- Keyboard dismissal paths implemented: Done toolbar, submit, fetch button, scroll, outside tap, onDisappear.
+- Trusted publisher resource is bundled with a 32-byte Ed25519 public key.
+- Signed Hello3E 1.3.0 signature verified independently.
+- SHA-256 of every signed file matched.
+- Tampered Hello3E package produced a checksum mismatch for www/index.html.
+- Existing unsigned installed packages remain readable as legacy unsigned packages.
+- New unsigned packages require developer mode.
+- Trusted packages cannot be replaced by unsigned packages.
 
-Checks completed
-- Info.plist parsed and linted successfully.
-- Camera usage description is present.
-- project.yml and GitHub Actions YAML parsed successfully.
-- 38 Swift source files passed swiftc frontend syntax parsing.
-- Repository validation script passed.
-- Hello3E 1.0.0, 1.1.0 and 1.2.0 ZIP archives passed integrity checks.
-- Every sample manifest entry and icon exists in its package.
-- TestCatalog JSON parsed and its relative package/icon URLs resolved under HTTPS.
-- TestCatalog package bytes match the standalone Hello3E 1.2.0 test package.
-- No files are removed relative to M02.
-
-Not performed in this environment
-- Full iphoneos compilation and linking, because the working environment does not contain Xcode or the iOS SDK.
-- Runtime camera, network, URLSession resume-data and WKWebView testing on a physical iPhone.
-
-Final build verification must be performed by the included GitHub Actions workflow and the M03 device test plan.
+Limitations:
+- Full iPhoneOS compilation requires Xcode/GitHub Actions and was not available in this Linux environment.

@@ -13,6 +13,9 @@ final class ThreeEStorageManager: ObservableObject {
     @Published private(set) var catalogLastCheckedAt: Date?
     @Published private(set) var isLoadingCatalog = false
     @Published var catalogURLString: String
+    @Published var allowUnsignedPackages: Bool {
+        didSet { UserDefaults.standard.set(allowUnsignedPackages, forKey: unsignedPackagesKey) }
+    }
     @Published var operationMessage: String?
     @Published var errorMessage: String?
 
@@ -21,6 +24,7 @@ final class ThreeEStorageManager: ObservableObject {
     private let bookmarkKey = "3e.selectedRootFolderBookmark.v1"
     private let catalogURLKey = "3e.webapp.catalogURL.v1"
     private let ignoredVersionsKey = "3e.webapp.ignoredVersions.v1"
+    private let unsignedPackagesKey = "3e.webapp.allowUnsignedPackages.v1"
     private let fileManager = FileManager.default
     private var longLivedAccessActive = false
     private var catalogSourceURL: URL?
@@ -29,6 +33,7 @@ final class ThreeEStorageManager: ObservableObject {
 
     init() {
         catalogURLString = UserDefaults.standard.string(forKey: catalogURLKey) ?? ""
+        allowUnsignedPackages = UserDefaults.standard.bool(forKey: unsignedPackagesKey)
         ignoredUpdateVersions = UserDefaults.standard.dictionary(forKey: ignoredVersionsKey) as? [String: String] ?? [:]
         downloadManager.objectWillChange
             .sink { [weak self] _ in self?.objectWillChange.send() }
@@ -205,17 +210,21 @@ final class ThreeEStorageManager: ObservableObject {
             let outcome = try WebAppPackageInstaller.install(
                 packageURL: packageURL,
                 installedAppsRoot: installedWebAppsURL,
-                temporaryRoot: temporaryWebAppsURL
+                temporaryRoot: temporaryWebAppsURL,
+                allowUnsignedPackages: allowUnsignedPackages
             )
             refreshInstalledWebApps()
 
+            let trustText = outcome.app.isTrustedPackage
+                ? " الناشر الموثوق: \(outcome.app.publisherDisplayName ?? "غير معروف")."
+                : " الحزمة غير موقعة وتم قبولها عبر وضع المطور."
             switch outcome.kind {
             case .installed:
-                operationMessage = "تم تثبيت \(outcome.app.name) بنجاح."
+                operationMessage = "تم تثبيت \(outcome.app.name) بنجاح.\(trustText)"
             case .updated(let previousVersion):
-                operationMessage = "تم تحديث \(outcome.app.name) من \(previousVersion) إلى \(outcome.app.version) مع الاحتفاظ بالبيانات."
+                operationMessage = "تم تحديث \(outcome.app.name) من \(previousVersion) إلى \(outcome.app.version) مع الاحتفاظ بالبيانات.\(trustText)"
             case .reinstalled:
-                operationMessage = "تمت إعادة تثبيت \(outcome.app.name) إصدار \(outcome.app.version)."
+                operationMessage = "تمت إعادة تثبيت \(outcome.app.name) إصدار \(outcome.app.version).\(trustText)"
             }
         } catch {
             errorMessage = error.localizedDescription

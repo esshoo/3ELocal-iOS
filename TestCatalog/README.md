@@ -12,5 +12,5 @@ TestCatalog/
 ├── icons/
 │   └── hello3e.png
 └── packages/
-    └── Hello3E-v1.2.0.3eweb
+    └── Hello3E-v1.3.0-Signed.3eweb
 ```

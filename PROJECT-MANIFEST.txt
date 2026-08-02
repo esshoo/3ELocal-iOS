@@ -1,14 +1,113 @@
-3ELocal iOS source package
-Bundle ID: com.essam.3E.localweb
-URL Scheme: localweb://
-Future App Group: group.com.essam.3e
-Minimum iOS: 16.0
-Swift files: 38
-Generated: 2026-08-02
-
-Runtime version: 0.2.0-M03
-Build number: 6
-Installable local web app format: .3eweb
-Remote web apps: HTTPS URL entries
-Online delivery: direct HTTPS downloads, QR and private catalog.json
-ZIP engine: ZIPFoundation 0.9.20
+.github/workflows/build-unsigned-ipa.yml	2578
+.gitignore	91
+ARCHITECTURE.md	3089
+CHANGELOG.md	3513
+LICENSE	1067
+M02-TEST-PLAN.md	1751
+M03-TEST-PLAN.md	3082
+M04-TEST-PLAN.md	2851
+PROJECT-MANIFEST.txt	399
+README.md	9003
+SIGNING.md	1160
+SampleProjects/Hello3E/app.js	179
+SampleProjects/Hello3E/index.html	493
+SampleProjects/Hello3E/style.css	686
+Sources/App/ThreeELocalApp.swift	1672
+Sources/Core/DeepLinkRouter.swift	806
+Sources/Core/PathSafety.swift	500
+Sources/Core/ThreeEAppIdentity.swift	1774
+Sources/Models/WebProject.swift	573
+Sources/Projects/ProjectLibraryStore.swift	1390
+Sources/Projects/ProjectScanner.swift	3839
+Sources/Storage/ThreeEStorageError.swift	936
+Sources/Storage/ThreeEStorageManager.swift	28102
+Sources/UI/DirectPackageDownloadView.swift	2010
+Sources/UI/InstalledWebAppCardView.swift	6895
+Sources/UI/InstalledWebAppDetailsView.swift	8001
+Sources/UI/InstalledWebAppPreviewView.swift	8979
+Sources/UI/InstalledWebAppsView.swift	12526
+Sources/UI/KeyboardDismissTapView.swift	2151
+Sources/UI/MainTabView.swift	1039
+Sources/UI/OnboardingView.swift	3632
+Sources/UI/ProjectCardView.swift	2627
+Sources/UI/ProjectLibraryView.swift	6396
+Sources/UI/ProjectPreviewView.swift	5120
+Sources/UI/QRCodeScannerView.swift	4958
+Sources/UI/RemoteWebAppEditorView.swift	9869
+Sources/UI/RootView.swift	650
+Sources/UI/SettingsView.swift	3939
+Sources/UI/ThreeEFolderPicker.swift	1187
+Sources/UI/WebAppCatalogView.swift	10452
+Sources/UI/WebAppDownloadsView.swift	8062
+Sources/Web/LocalHTTPServer.swift	13801
+Sources/Web/NetworkStatusMonitor.swift	671
+Sources/Web/WebAppDataStoreIdentifier.swift	1701
+Sources/Web/WebViewContainer.swift	8013
+Sources/WebApps/RemoteWebAppInstaller.swift	6835
+Sources/WebApps/RemoteWebAppMetadataFetcher.swift	10198
+Sources/WebApps/UTType+ThreeEWeb.swift	178
+Sources/WebApps/WebAppCatalog.swift	2186
+Sources/WebApps/WebAppDownloadManager.swift	12182
+Sources/WebApps/WebAppManifest.swift	6951
+Sources/WebApps/WebAppPackageError.swift	5890
+Sources/WebApps/WebAppPackageInstaller.swift	18461
+Sources/WebApps/WebAppPackageTrust.swift	9564
+Supporting/Assets.xcassets/AccentColor.colorset/Contents.json	329
+Supporting/Assets.xcassets/AppIcon.appiconset/Contents.json	2184
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-1024.png	37405
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-20.png	839
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-20@2x-ipad.png	2165
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-20@2x.png	2165
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-20@3x.png	3476
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-29.png	1424
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-29@2x-ipad.png	3451
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-29@2x.png	3451
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-29@3x.png	5318
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-40.png	2165
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-40@2x-ipad.png	4863
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-40@2x.png	4863
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-40@3x.png	7769
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-60@2x.png	7769
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-60@3x.png	12181
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-76.png	4674
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-76@2x.png	10079
+Supporting/Assets.xcassets/AppIcon.appiconset/icon-83.5@2x.png	10992
+Supporting/Assets.xcassets/Contents.json	63
+Supporting/Info.plist	3598
+Supporting/TrustedPublishers.json	299
+THIRD-PARTY-NOTICES.md	391
+TestCatalog/README.md	553
+TestCatalog/SHA256.txt	438
+TestCatalog/catalog.json	482
+TestCatalog/icons/hello3e.png	37405
+TestCatalog/packages/Hello3E-v1.2.0.3eweb	37473
+TestCatalog/packages/Hello3E-v1.3.0-Signed.3eweb	38292
+TestPackages/Hello3E-v1.0.0.3eweb	37375
+TestPackages/Hello3E-v1.1.0.3eweb	37463
+TestPackages/Hello3E-v1.2.0.3eweb	37473
+TestPackages/Hello3E-v1.3.0-Signed.3eweb	38292
+TestPackages/Hello3E-v1.3.0-Tampered.3eweb	38789
+TestPackages/SHA256.txt	1960
+TestPackages/Sources/Hello3E-1.0.0/icon.png	37405
+TestPackages/Sources/Hello3E-1.0.0/manifest.json	337
+TestPackages/Sources/Hello3E-1.0.0/www/app.js	334
+TestPackages/Sources/Hello3E-1.0.0/www/index.html	934
+TestPackages/Sources/Hello3E-1.0.0/www/style.css	1225
+TestPackages/Sources/Hello3E-1.1.0/icon.png	37405
+TestPackages/Sources/Hello3E-1.1.0/manifest.json	354
+TestPackages/Sources/Hello3E-1.1.0/www/app.js	451
+TestPackages/Sources/Hello3E-1.1.0/www/index.html	1061
+TestPackages/Sources/Hello3E-1.1.0/www/style.css	1317
+TestPackages/Sources/Hello3E-1.2.0/icon.png	37405
+TestPackages/Sources/Hello3E-1.2.0/manifest.json	336
+TestPackages/Sources/Hello3E-1.2.0/www/app.js	451
+TestPackages/Sources/Hello3E-1.2.0/www/index.html	1154
+TestPackages/Sources/Hello3E-1.2.0/www/style.css	1317
+VALIDATION-REPORT.txt	952
+WEBAPPS-ROADMAP.md	2706
+project.yml	1200
+scripts/3eweb_sign.py	5280
+scripts/build_sample_3eweb.py	694
+scripts/check_repository.sh	4617
+scripts/package_unsigned_ipa.sh	751
+scripts/requirements-signing.txt	21

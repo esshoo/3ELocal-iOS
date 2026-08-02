@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "publishers": [
+    {
+      "id": "com.essam.3e",
+      "name": "3E / Essam",
+      "keys": [
+        {
+          "id": "3e-main-2026-01",
+          "algorithm": "Ed25519",
+          "publicKey": "vm3fHe4EfiyEAP7b8yyB8QjzYznT7PVbUh31qPHNaVs="
+        }
+      ]
+    }
+  ]
+}

@@ -31,6 +31,18 @@ struct SettingsView: View {
                     }
                 }
 
+                Section("أمان حزم 3E") {
+                    Toggle("السماح بالحزم غير الموقعة (وضع المطور)", isOn: $storage.allowUnsignedPackages)
+                    Label(
+                        storage.allowUnsignedPackages
+                            ? "وضع المطور مفعل: يمكن تثبيت حزم غير موقعة، لكن الحزم ذات التوقيع التالف ستظل مرفوضة."
+                            : "الوضع الآمن: لا تُثبت إلا الحزم الموقعة من ناشر موثوق.",
+                        systemImage: storage.allowUnsignedPackages ? "exclamationmark.triangle.fill" : "checkmark.shield.fill"
+                    )
+                    .font(.footnote)
+                    .foregroundStyle(storage.allowUnsignedPackages ? Color.orange : Color.green)
+                }
+
                 Section("تطبيقات 3E") {
                     AppLinkRow(app: .lidar)
                     AppLinkRow(app: .roomElectrical)

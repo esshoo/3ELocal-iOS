@@ -1,9 +1,11 @@
 import SwiftUI
+import UIKit
 
 struct WebAppCatalogView: View {
     @EnvironmentObject private var storage: ThreeEStorageManager
     @State private var showingDirectDownload = false
     @State private var searchText = ""
+    @FocusState private var catalogURLFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -13,8 +15,15 @@ struct WebAppCatalogView: View {
                         .textInputAutocapitalization(.never)
                         .keyboardType(.URL)
                         .autocorrectionDisabled()
+                        .submitLabel(.go)
+                        .focused($catalogURLFocused)
+                        .onSubmit {
+                            dismissCatalogKeyboard()
+                            Task { await storage.fetchCatalog() }
+                        }
 
                     Button {
+                        dismissCatalogKeyboard()
                         Task { await storage.fetchCatalog() }
                     } label: {
                         if storage.isLoadingCatalog {
@@ -70,9 +79,16 @@ struct WebAppCatalogView: View {
             }
             .navigationTitle("متجر 3E الخاص")
             .searchable(text: $searchText, prompt: "ابحث في الفهرس")
+            .scrollDismissesKeyboard(.interactively)
+            .background(KeyboardDismissTapView())
             .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("تم") { dismissCatalogKeyboard() }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
+                        dismissCatalogKeyboard()
                         showingDirectDownload = true
                     } label: {
                         Image(systemName: "link.badge.plus")
@@ -92,6 +108,9 @@ struct WebAppCatalogView: View {
             } message: {
                 Text(storage.errorMessage ?? storage.operationMessage ?? "")
             }
+            .onDisappear {
+                dismissCatalogKeyboard()
+            }
             .task {
                 if storage.catalogEntries.isEmpty,
                    !storage.catalogURLString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -99,6 +118,16 @@ struct WebAppCatalogView: View {
                 }
             }
         }
+    }
+
+    private func dismissCatalogKeyboard() {
+        catalogURLFocused = false
+        UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil,
+            from: nil,
+            for: nil
+        )
     }
 
     private var filteredEntries: [WebAppCatalogEntry] {

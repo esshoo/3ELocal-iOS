@@ -25,7 +25,8 @@ enum WebAppPackageInstaller {
     static func install(
         packageURL: URL,
         installedAppsRoot: URL,
-        temporaryRoot: URL
+        temporaryRoot: URL,
+        allowUnsignedPackages: Bool = false
     ) throws -> WebAppInstallOutcome {
         let didAccess = packageURL.startAccessingSecurityScopedResource()
         defer {
@@ -94,6 +95,11 @@ enum WebAppPackageInstaller {
         let manifestURL = packageRoot.appendingPathComponent("manifest.json")
         let manifest = try decodeManifest(at: manifestURL)
         try validate(manifest: manifest, packageRoot: packageRoot)
+        let packageTrust = try WebAppPackageVerifier.verify(
+            packageRoot: packageRoot,
+            manifest: manifest,
+            allowUnsigned: allowUnsignedPackages
+        )
 
         let appContainer = installedAppsRoot.appendingPathComponent(manifest.id, isDirectory: true)
         let versionsURL = appContainer.appendingPathComponent("Versions", isDirectory: true)
@@ -103,6 +109,13 @@ enum WebAppPackageInstaller {
         let existingRecord = try? loadRecord(at: recordURL)
         if let existingRecord, existingRecord.activeManifest.type != .local {
             throw WebAppPackageError.invalidManifest("المعرّف مستخدم بواسطة تطبيق من نوع مختلف.")
+        }
+        if let existingTrust = existingRecord?.packageTrust,
+           existingTrust.state == .trusted {
+            guard packageTrust.state == .trusted,
+                  packageTrust.publisherID == existingTrust.publisherID else {
+                throw WebAppPackageError.signatureDowngradeNotAllowed
+            }
         }
         let outcomeKind: WebAppInstallOutcome.Kind
         if let existingRecord {
@@ -152,7 +165,8 @@ enum WebAppPackageInstaller {
             installedAt: existingRecord?.installedAt ?? now,
             updatedAt: now,
             lastLaunchedAt: existingRecord?.lastLaunchedAt,
-            launchCount: existingRecord?.launchCount
+            launchCount: existingRecord?.launchCount,
+            packageTrust: packageTrust
         )
         try writeRecord(newRecord, to: recordURL)
 
@@ -181,11 +195,25 @@ enum WebAppPackageInstaller {
             guard let record = try? loadRecord(at: recordURL),
                   record.activeManifest.id == child.lastPathComponent,
                   isSafeVersion(record.activeVersion) else { continue }
-            let app = InstalledWebApp(record: record, containerURL: child)
-            guard (try? validate(manifest: record.activeManifest, packageRoot: app.activePackageURL, allowRemote: true)) != nil else {
+            var verifiedRecord = record
+            let app = InstalledWebApp(record: verifiedRecord, containerURL: child)
+            guard (try? validate(manifest: verifiedRecord.activeManifest, packageRoot: app.activePackageURL, allowRemote: true)) != nil else {
                 continue
             }
-            apps.append(app)
+            if verifiedRecord.activeManifest.type == .local {
+                guard let verifiedTrust = try? WebAppPackageVerifier.verifyInstalledPackage(
+                    packageRoot: app.activePackageURL,
+                    manifest: verifiedRecord.activeManifest,
+                    expectedTrust: verifiedRecord.packageTrust
+                ) else { continue }
+                if verifiedRecord.packageTrust != verifiedTrust {
+                    verifiedRecord.packageTrust = verifiedTrust
+                    try? writeRecord(verifiedRecord, to: child.appendingPathComponent(recordFileName))
+                }
+            } else {
+                verifiedRecord.packageTrust = .remote
+            }
+            apps.append(InstalledWebApp(record: verifiedRecord, containerURL: child))
         }
 
         return apps.sorted {
@@ -224,6 +252,11 @@ enum WebAppPackageInstaller {
         record.activeVersion = previous
         record.previousVersion = currentVersion
         record.updatedAt = Date()
+        record.packageTrust = try WebAppPackageVerifier.verifyInstalledPackage(
+            packageRoot: previousURL,
+            manifest: previousManifest,
+            expectedTrust: nil
+        )
 
         try writeRecord(record, to: app.containerURL.appendingPathComponent(recordFileName))
         return InstalledWebApp(record: record, containerURL: app.containerURL)

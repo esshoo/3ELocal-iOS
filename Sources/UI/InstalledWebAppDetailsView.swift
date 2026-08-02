@@ -21,6 +21,7 @@ struct InstalledWebAppDetailsView: View {
                                 .font(.title3.bold())
                             HStack(spacing: 8) {
                                 TypeBadge(app: app)
+                                PackageTrustBadge(app: app)
                                 if app.isRemote {
                                     Label(isOnline ? "متصل" : "دون اتصال", systemImage: isOnline ? "wifi" : "wifi.slash")
                                         .font(.caption)
@@ -77,6 +78,26 @@ struct InstalledWebAppDetailsView: View {
                     }
                 }
 
+                if app.isLocal {
+                    Section("الثقة والتوقيع") {
+                        LabeledContent("الحالة", value: trustName)
+                        if let publisher = app.publisherDisplayName {
+                            LabeledContent("الناشر", value: publisher)
+                        }
+                        if let keyID = app.packageTrust.keyID {
+                            LabeledContent("مفتاح التوقيع") {
+                                Text(keyID).font(.caption.monospaced()).textSelection(.enabled)
+                            }
+                        }
+                        if let verifiedAt = app.packageTrust.verifiedAt {
+                            LabeledContent("آخر تحقق", value: formatted(verifiedAt))
+                        }
+                        Text(trustDescription)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
                 if app.isRemote {
                     Section("سياسة التنقل") {
                         LabeledContent("السياسة", value: navigationPolicyName)
@@ -110,6 +131,25 @@ struct InstalledWebAppDetailsView: View {
                     Button("تم") { dismiss() }
                 }
             }
+        }
+    }
+
+    private var trustName: String {
+        switch app.packageTrust.state {
+        case .trusted: return "حزمة موقعة وموثوقة"
+        case .unsigned: return "حزمة غير موقعة"
+        case .remote: return "تطبيق ويب من رابط"
+        }
+    }
+
+    private var trustDescription: String {
+        switch app.packageTrust.state {
+        case .trusted:
+            return "تم التحقق من توقيع Ed25519 ومن بصمة كل ملف داخل الحزمة."
+        case .unsigned:
+            return "هذه حزمة قديمة أو ثُبتت أثناء تفعيل وضع المطور. لا يمكن ضمان مصدر ملفاتها."
+        case .remote:
+            return "المحتوى يأتي مباشرة من موقع الإنترنت ولا يستخدم توقيع حزم 3E المحلية."
         }
     }
 

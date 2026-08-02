@@ -111,7 +111,8 @@ enum RemoteWebAppInstaller {
             installedAt: existingRecord?.installedAt ?? now,
             updatedAt: now,
             lastLaunchedAt: existingRecord?.lastLaunchedAt,
-            launchCount: existingRecord?.launchCount
+            launchCount: existingRecord?.launchCount,
+            packageTrust: .remote
         )
         try WebAppPackageInstaller.writeRecord(record, to: recordURL)
 

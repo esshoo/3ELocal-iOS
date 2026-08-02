@@ -19,6 +19,7 @@ struct InstalledWebAppCardView: View {
                 Spacer()
                 VStack(alignment: .trailing, spacing: 7) {
                     TypeBadge(app: app)
+                    PackageTrustBadge(app: app)
                     if app.isRemote {
                         Label(isOnline ? "متصل" : "دون اتصال", systemImage: isOnline ? "wifi" : "wifi.slash")
                             .font(.caption2.weight(.semibold))
@@ -110,6 +111,43 @@ struct InstalledWebAppCardView: View {
             Button(role: .destructive, action: uninstall) {
                 Label("حذف التطبيق وبياناته", systemImage: "trash")
             }
+        }
+    }
+}
+
+struct PackageTrustBadge: View {
+    let app: InstalledWebApp
+
+    var body: some View {
+        Label(title, systemImage: icon)
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(color)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 4)
+            .background(color.opacity(0.12), in: Capsule())
+    }
+
+    private var title: String {
+        switch app.packageTrust.state {
+        case .trusted: return "موثوق"
+        case .unsigned: return "غير موقّع"
+        case .remote: return "ويب"
+        }
+    }
+
+    private var icon: String {
+        switch app.packageTrust.state {
+        case .trusted: return "checkmark.shield.fill"
+        case .unsigned: return "exclamationmark.triangle.fill"
+        case .remote: return "globe"
+        }
+    }
+
+    private var color: Color {
+        switch app.packageTrust.state {
+        case .trusted: return .green
+        case .unsigned: return .orange
+        case .remote: return .purple
         }
     }
 }

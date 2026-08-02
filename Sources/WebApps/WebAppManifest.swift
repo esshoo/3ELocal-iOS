@@ -56,6 +56,7 @@ struct InstalledWebAppRecord: Codable, Hashable {
     var updatedAt: Date
     var lastLaunchedAt: Date?
     var launchCount: Int?
+    var packageTrust: WebAppPackageTrust?
 }
 
 struct InstalledWebApp: Identifiable, Hashable {
@@ -130,6 +131,12 @@ struct InstalledWebApp: Identifiable, Hashable {
     var updatedAt: Date { record.updatedAt }
     var lastLaunchedAt: Date? { record.lastLaunchedAt }
     var launchCount: Int { record.launchCount ?? 0 }
+    var packageTrust: WebAppPackageTrust {
+        if let trust = record.packageTrust { return trust }
+        return isRemote ? .remote : .unsigned
+    }
+    var isTrustedPackage: Bool { packageTrust.state == .trusted }
+    var publisherDisplayName: String? { packageTrust.publisherName }
 
     var storageSizeBytes: Int64 {
         FileSystemSize.directorySize(at: containerURL)

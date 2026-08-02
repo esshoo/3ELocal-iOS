@@ -22,6 +22,18 @@ enum WebAppPackageError: LocalizedError {
     case runtimeTooOld(required: String, current: String)
     case recordMissing
     case versionMissing(String)
+    case signatureRequired
+    case signatureIncomplete
+    case invalidSignatureDocument
+    case unsupportedSignatureAlgorithm(String)
+    case untrustedPublisher(String)
+    case invalidPackageSignature
+    case invalidChecksumsDocument
+    case signatureManifestMismatch
+    case checksumFileMissing(String)
+    case checksumMismatch(String)
+    case unsignedExtraFile(String)
+    case signatureDowngradeNotAllowed
 
     var errorDescription: String? {
         switch self {
@@ -67,6 +79,30 @@ enum WebAppPackageError: LocalizedError {
             return "سجل التطبيق المثبت غير موجود أو تالف."
         case .versionMissing(let version):
             return "ملفات الإصدار \(version) غير موجودة."
+        case .signatureRequired:
+            return "الحزمة غير موقعة. فعّل السماح بالحزم غير الموقعة من الإعدادات فقط أثناء التطوير، أو وقّع الحزمة بناشر موثوق."
+        case .signatureIncomplete:
+            return "ملفات توقيع الحزمة ناقصة أو غير متطابقة."
+        case .invalidSignatureDocument:
+            return "ملف signature.json غير صالح."
+        case .unsupportedSignatureAlgorithm(let algorithm):
+            return "خوارزمية توقيع الحزمة غير مدعومة: \(algorithm)"
+        case .untrustedPublisher(let publisher):
+            return "ناشر الحزمة غير موثوق في هذا الإصدار من 3ELocal: \(publisher)"
+        case .invalidPackageSignature:
+            return "توقيع الحزمة غير صالح. قد تكون الحزمة معدلة أو مزورة."
+        case .invalidChecksumsDocument:
+            return "ملف checksums.json غير صالح."
+        case .signatureManifestMismatch:
+            return "التوقيع لا يطابق معرّف التطبيق أو رقم الإصدار في manifest.json."
+        case .checksumFileMissing(let path):
+            return "ملف موقّع مفقود من الحزمة: \(path)"
+        case .checksumMismatch(let path):
+            return "تم تعديل ملف بعد توقيع الحزمة: \(path)"
+        case .unsignedExtraFile(let path):
+            return "تحتوي الحزمة الموقعة على ملف إضافي غير مشمول بالتوقيع: \(path)"
+        case .signatureDowngradeNotAllowed:
+            return "لا يمكن استبدال إصدار موثوق بحزمة غير موقعة أو بتوقيع مختلف."
         }
     }
 }
