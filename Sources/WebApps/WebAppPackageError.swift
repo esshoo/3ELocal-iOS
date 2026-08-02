@@ -18,6 +18,7 @@ enum WebAppPackageError: LocalizedError {
     case missingEntry(String)
     case invalidEntry(String)
     case invalidIcon(String)
+    case invalidRemoteURL(String)
     case runtimeTooOld(required: String, current: String)
     case recordMissing
     case versionMissing(String)
@@ -58,6 +59,8 @@ enum WebAppPackageError: LocalizedError {
             return "مسار ملف البداية غير آمن أو غير مدعوم: \(entry)"
         case .invalidIcon(let icon):
             return "مسار أيقونة التطبيق غير آمن أو الملف غير موجود: \(icon)"
+        case .invalidRemoteURL(let url):
+            return "رابط تطبيق الويب غير صالح أو لا يستخدم HTTPS: \(url)"
         case .runtimeTooOld(let required, let current):
             return "التطبيق يحتاج 3ELocal \(required) أو أحدث. الإصدار الحالي \(current)."
         case .recordMissing:

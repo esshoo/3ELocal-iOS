@@ -1,19 +1,25 @@
-3ELocal v0.2.0-M01 validation report
+3ELocal v0.2.0-M02 validation report
 Date: 2026-08-02
 
 Completed checks:
-- Uploaded v0.1.2 source archive extracted successfully.
-- All Swift source files passed `swiftc -frontend -parse` with Swift 6.2.1.
-- project.yml parsed successfully as YAML.
-- Supporting/Info.plist passed plutil validation.
-- Custom .3eweb UTI and document type are present.
-- Both sample .3eweb files are valid ZIP archives.
-- Both sample manifests decode as JSON and reference existing entry/icon files.
-- Repository validation script completed successfully.
-- Archive traversal, symlink, size, entry-count, executable-type, manifest, runtime, entry and icon checks are implemented.
+- M01 source copied without changing the fixed Bundle ID or URL scheme.
+- Existing `.3eweb` sample packages remain valid ZIP archives.
+- Existing local package manifests remain backward-compatible after optional M02 fields were added.
+- A pre-M02 installed-app JSON record was decoded in a standalone Swift compatibility check; missing launch-history fields correctly decode as nil.
+- All 32 Swift source files passed `swiftc -frontend -parse` with Swift 6.2.1.
+- Supporting/Info.plist passed the repository validation checks.
+- The repository validation script completed successfully.
+- Remote application validation requires HTTPS, a valid host, a safe identifier and valid allowed domains.
+- Remote metadata retrieval is size-limited and only follows HTTPS manifest/icon resources.
+- Navigation policies cover same-host, declared-domain and unrestricted modes.
+- Existing local apps continue to use the default WebKit store, preserving the M01 localStorage origin.
+- Remote apps use deterministic per-app persistent WebKit stores on iOS 17 and newer.
+- Pending `.3eweb` imports are copied to app support storage when the shared 3E folder is not connected.
+- Build number increased from 4 to 5.
 
 Not performed in this Linux environment:
 - Full Xcode/iPhoneOS compilation.
-- Runtime installation on a physical iPhone.
+- Runtime testing of WKWebsiteDataStore profiles on a physical iPhone.
+- Live metadata discovery against every possible website implementation.
 
-The included GitHub Actions workflow is the required next build validation. It will resolve ZIPFoundation through Swift Package Manager and build the unsigned IPA using Xcode on macOS.
+The included GitHub Actions workflow remains the required device-build validation step.

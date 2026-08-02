@@ -12,13 +12,15 @@
 - Use a stable loopback origin for each installed app.
 - Include install/update test packages.
 
-## M02 — Remote Web Apps
+## M02 — Remote Web Apps — implemented in 0.2.0 build 5
 
 - Add remote URL entries without downloading site content.
 - Read web manifests and website icons when permitted.
 - Add online/offline status and connection errors.
 - Add per-app navigation policies and allowed domains.
-- Separate persistent WebKit data for remote application origins.
+- Separate persistent WebKit data for remote application origins on iOS 17 and newer.
+- Add app details, storage size and launch-history information.
+- Improve Files-app package intake before and after folder connection.
 
 ## M03 — Online package downloads
 

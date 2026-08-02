@@ -101,6 +101,9 @@ enum WebAppPackageInstaller {
         let recordURL = appContainer.appendingPathComponent(recordFileName)
 
         let existingRecord = try? loadRecord(at: recordURL)
+        if let existingRecord, existingRecord.activeManifest.type != .local {
+            throw WebAppPackageError.invalidManifest("المعرّف مستخدم بواسطة تطبيق من نوع مختلف.")
+        }
         let outcomeKind: WebAppInstallOutcome.Kind
         if let existingRecord {
             if existingRecord.activeVersion == manifest.version {
@@ -147,7 +150,9 @@ enum WebAppPackageInstaller {
                 $0.activeVersion == manifest.version ? $0.previousVersion : $0.activeVersion
             },
             installedAt: existingRecord?.installedAt ?? now,
-            updatedAt: now
+            updatedAt: now,
+            lastLaunchedAt: existingRecord?.lastLaunchedAt,
+            launchCount: existingRecord?.launchCount
         )
         try writeRecord(newRecord, to: recordURL)
 
@@ -177,7 +182,7 @@ enum WebAppPackageInstaller {
                   record.activeManifest.id == child.lastPathComponent,
                   isSafeVersion(record.activeVersion) else { continue }
             let app = InstalledWebApp(record: record, containerURL: child)
-            guard (try? validate(manifest: record.activeManifest, packageRoot: app.activePackageURL)) != nil else {
+            guard (try? validate(manifest: record.activeManifest, packageRoot: app.activePackageURL, allowRemote: true)) != nil else {
                 continue
             }
             apps.append(app)
@@ -196,6 +201,9 @@ enum WebAppPackageInstaller {
     }
 
     static func rollback(_ app: InstalledWebApp) throws -> InstalledWebApp {
+        guard app.appType == .local else {
+            throw WebAppPackageError.unsupportedAppType(app.appType.rawValue)
+        }
         guard let previous = app.record.previousVersion, isSafeVersion(previous) else {
             throw WebAppPackageError.versionMissing("previous")
         }
@@ -273,11 +281,18 @@ enum WebAppPackageInstaller {
         }
     }
 
-    private static func validate(manifest: WebAppManifest, packageRoot: URL) throws {
+    static func validate(
+        manifest: WebAppManifest,
+        packageRoot: URL,
+        allowRemote: Bool = false
+    ) throws {
         guard manifest.schemaVersion == 1 else {
             throw WebAppPackageError.unsupportedSchema(manifest.schemaVersion)
         }
-        guard manifest.type == .local else {
+        if manifest.type == .remote && !allowRemote {
+            throw WebAppPackageError.unsupportedAppType(manifest.type.rawValue)
+        }
+        guard manifest.type == .local || manifest.type == .remote else {
             throw WebAppPackageError.unsupportedAppType(manifest.type.rawValue)
         }
 
@@ -302,13 +317,30 @@ enum WebAppPackageInstaller {
             )
         }
 
-        guard let safeEntry = PathSafety.safeRelativePath(manifest.entry),
-              ["html", "htm"].contains(URL(fileURLWithPath: safeEntry).pathExtension.lowercased()) else {
-            throw WebAppPackageError.invalidEntry(manifest.entry)
-        }
-        let entryURL = packageRoot.appendingPathComponent(safeEntry)
-        guard FileManager.default.fileExists(atPath: entryURL.path) else {
-            throw WebAppPackageError.missingEntry(manifest.entry)
+        switch manifest.type {
+        case .local:
+            guard let entry = manifest.entry,
+                  let safeEntry = PathSafety.safeRelativePath(entry),
+                  ["html", "htm"].contains(URL(fileURLWithPath: safeEntry).pathExtension.lowercased()) else {
+                throw WebAppPackageError.invalidEntry(manifest.entry ?? "")
+            }
+            let entryURL = packageRoot.appendingPathComponent(safeEntry)
+            guard FileManager.default.fileExists(atPath: entryURL.path) else {
+                throw WebAppPackageError.missingEntry(entry)
+            }
+
+        case .remote:
+            guard let rawURL = manifest.startURL,
+                  let url = URL(string: rawURL),
+                  let scheme = url.scheme?.lowercased(),
+                  scheme == "https",
+                  url.host != nil else {
+                throw WebAppPackageError.invalidRemoteURL(manifest.startURL ?? "")
+            }
+            try validateDomains(manifest.allowedDomains ?? [])
+
+        case .hybrid:
+            throw WebAppPackageError.unsupportedAppType(manifest.type.rawValue)
         }
 
         if let icon = manifest.icon {
@@ -322,14 +354,30 @@ enum WebAppPackageInstaller {
         }
     }
 
+    private static func validateDomains(_ domains: [String]) throws {
+        guard domains.count <= 50 else {
+            throw WebAppPackageError.invalidManifest("عدد النطاقات المسموح بها كبير جدًا.")
+        }
+        let pattern = "^[A-Za-z0-9.-]+$"
+        for domain in domains {
+            let normalized = domain.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !normalized.isEmpty,
+                  normalized.count <= 253,
+                  normalized.range(of: pattern, options: .regularExpression) != nil,
+                  !normalized.contains("..") else {
+                throw WebAppPackageError.invalidManifest("نطاق غير صالح: \(domain)")
+            }
+        }
+    }
 
-    private static func isSafeVersion(_ version: String) -> Bool {
+
+    static func isSafeVersion(_ version: String) -> Bool {
         let versionPattern = "^[A-Za-z0-9][A-Za-z0-9._+-]{0,49}$"
         return version.range(of: versionPattern, options: .regularExpression) != nil &&
             !version.contains("..")
     }
 
-    private static func loadRecord(at url: URL) throws -> InstalledWebAppRecord {
+    static func loadRecord(at url: URL) throws -> InstalledWebAppRecord {
         guard FileManager.default.fileExists(atPath: url.path) else {
             throw WebAppPackageError.recordMissing
         }
@@ -338,7 +386,7 @@ enum WebAppPackageInstaller {
         return try decoder.decode(InstalledWebAppRecord.self, from: Data(contentsOf: url))
     }
 
-    private static func writeRecord(_ record: InstalledWebAppRecord, to url: URL) throws {
+    static func writeRecord(_ record: InstalledWebAppRecord, to url: URL) throws {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
         encoder.dateEncodingStrategy = .iso8601

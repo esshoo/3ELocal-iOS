@@ -3,63 +3,82 @@ import UIKit
 
 struct InstalledWebAppCardView: View {
     let app: InstalledWebApp
+    let isOnline: Bool
     let open: () -> Void
+    let details: () -> Void
     let rollback: () -> Void
     let uninstall: () -> Void
 
     var body: some View {
-        Button(action: open) {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .top) {
-                    InstalledWebAppIconView(app: app, size: 54)
-                    Spacer()
-                    Text("v\(app.version)")
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 5)
-                        .background(.secondary.opacity(0.1), in: Capsule())
-                }
-
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(app.name)
-                        .font(.headline)
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
-
-                    if let description = app.appDescription, !description.isEmpty {
-                        Text(description)
-                            .font(.caption)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top) {
+                InstalledWebAppIconView(app: app, size: 54)
+                Spacer()
+                VStack(alignment: .trailing, spacing: 7) {
+                    TypeBadge(app: app)
+                    if app.isRemote {
+                        Label(isOnline ? "متصل" : "دون اتصال", systemImage: isOnline ? "wifi" : "wifi.slash")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(isOnline ? Color.green : Color.orange)
+                    } else {
+                        Text("v\(app.version)")
+                            .font(.caption.monospaced())
                             .foregroundStyle(.secondary)
-                            .lineLimit(2)
                     }
+                }
+            }
 
-                    Text(app.id)
-                        .font(.caption2.monospaced())
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
+            VStack(alignment: .leading, spacing: 5) {
+                Text(app.name)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+
+                if let description = app.appDescription, !description.isEmpty {
+                    Text(description)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
                 }
 
-                Spacer(minLength: 0)
+                Text(app.isRemote ? (app.remoteURL?.host ?? app.id) : app.id)
+                    .font(.caption2.monospaced())
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+            }
 
+            Spacer(minLength: 0)
+
+            HStack {
                 Label("فتح التطبيق", systemImage: "play.fill")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.blue)
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity, minHeight: 196, alignment: .leading)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(.primary.opacity(0.08), lineWidth: 1)
+                Spacer()
+                Button(action: details) {
+                    Image(systemName: "info.circle")
+                        .font(.title3)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("تفاصيل التطبيق")
             }
         }
-        .buttonStyle(.plain)
+        .padding(16)
+        .frame(maxWidth: .infinity, minHeight: 210, alignment: .leading)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(.primary.opacity(0.08), lineWidth: 1)
+        }
+        .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .onTapGesture(perform: open)
         .contextMenu {
             Button(action: open) {
                 Label("فتح", systemImage: "play.fill")
             }
-            if app.previousVersion != nil {
+            Button(action: details) {
+                Label("التفاصيل", systemImage: "info.circle")
+            }
+            if app.isLocal, app.previousVersion != nil {
                 Button(action: rollback) {
                     Label("الرجوع للإصدار السابق", systemImage: "arrow.uturn.backward")
                 }
@@ -82,11 +101,11 @@ struct InstalledWebAppIconView: View {
                     .resizable()
                     .scaledToFill()
             } else {
-                Image(systemName: "globe")
+                Image(systemName: app.isRemote ? "globe" : "shippingbox")
                     .font(.system(size: size * 0.48, weight: .semibold))
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(app.isRemote ? Color.purple : Color.blue)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(.blue.opacity(0.12))
+                    .background((app.isRemote ? Color.purple : Color.blue).opacity(0.12))
             }
         }
         .frame(width: size, height: size)

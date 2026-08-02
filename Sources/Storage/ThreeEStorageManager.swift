@@ -29,6 +29,11 @@ final class ThreeEStorageManager: ObservableObject {
     var sharedURL: URL? { rootURL?.appendingPathComponent("Shared", isDirectory: true) }
     var sharedProjectsURL: URL? { sharedURL?.appendingPathComponent("Projects", isDirectory: true) }
     var systemURL: URL? { rootURL?.appendingPathComponent("System", isDirectory: true) }
+    private var pendingImportsURL: URL {
+        let base = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? fileManager.temporaryDirectory
+        return base.appendingPathComponent("PendingWebAppImports", isDirectory: true)
+    }
 
     func connect(to selectedFolderURL: URL) {
         do {
@@ -51,6 +56,7 @@ final class ThreeEStorageManager: ObservableObject {
             isConnected = true
             errorMessage = nil
             refreshAll()
+            processPendingWebAppPackages()
         } catch {
             stopLongLivedAccess()
             rootURL = nil
@@ -90,6 +96,7 @@ final class ThreeEStorageManager: ObservableObject {
             }
 
             refreshAll()
+            processPendingWebAppPackages()
         } catch {
             stopLongLivedAccess()
             rootURL = nil
@@ -126,6 +133,41 @@ final class ThreeEStorageManager: ObservableObject {
         }
     }
 
+    func handleIncomingWebAppPackage(from packageURL: URL) {
+        if isConnected {
+            installWebAppPackage(from: packageURL)
+            return
+        }
+
+        let accessed = packageURL.startAccessingSecurityScopedResource()
+        defer { if accessed { packageURL.stopAccessingSecurityScopedResource() } }
+
+        do {
+            try fileManager.createDirectory(at: pendingImportsURL, withIntermediateDirectories: true)
+            let destination = pendingImportsURL.appendingPathComponent(
+                "\(UUID().uuidString)-\(packageURL.lastPathComponent)"
+            )
+            try fileManager.copyItem(at: packageURL, to: destination)
+            errorMessage = "تم حفظ حزمة التطبيق مؤقتًا. اختر مجلد 3E وسيتم تثبيتها تلقائيًا."
+        } catch {
+            errorMessage = "تعذر استقبال حزمة التطبيق: \(error.localizedDescription)"
+        }
+    }
+
+    private func processPendingWebAppPackages() {
+        guard isConnected,
+              let files = try? fileManager.contentsOfDirectory(
+                at: pendingImportsURL,
+                includingPropertiesForKeys: [.isRegularFileKey],
+                options: [.skipsHiddenFiles]
+              ) else { return }
+
+        for file in files where ["3eweb", "zip"].contains(file.pathExtension.lowercased()) {
+            installWebAppPackage(from: file)
+            try? fileManager.removeItem(at: file)
+        }
+    }
+
     func installWebAppPackage(from packageURL: URL) {
         guard let installedWebAppsURL, let temporaryWebAppsURL else {
             errorMessage = ThreeEStorageError.folderNotConnected.localizedDescription
@@ -159,9 +201,54 @@ final class ThreeEStorageManager: ObservableObject {
         isInstallingWebApp = false
     }
 
+    func addRemoteWebApp(_ draft: RemoteWebAppDraft) {
+        guard let installedWebAppsURL else {
+            errorMessage = ThreeEStorageError.folderNotConnected.localizedDescription
+            return
+        }
+
+        isInstallingWebApp = true
+        operationMessage = nil
+        errorMessage = nil
+
+        do {
+            let outcome = try RemoteWebAppInstaller.install(
+                draft: draft,
+                installedAppsRoot: installedWebAppsURL
+            )
+            refreshInstalledWebApps()
+            switch outcome.kind {
+            case .installed:
+                operationMessage = "تمت إضافة تطبيق الإنترنت \(outcome.app.name)."
+            case .updated:
+                operationMessage = "تم تحديث إعدادات تطبيق الإنترنت \(outcome.app.name)."
+            case .reinstalled:
+                operationMessage = "تم حفظ إعدادات \(outcome.app.name) من جديد."
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+
+        isInstallingWebApp = false
+    }
+
+    @discardableResult
+    func markWebAppLaunched(_ app: InstalledWebApp) -> InstalledWebApp {
+        do {
+            let updated = try RemoteWebAppInstaller.markLaunched(app)
+            refreshInstalledWebApps()
+            return updated
+        } catch {
+            return app
+        }
+    }
+
     func uninstallWebApp(_ app: InstalledWebApp) {
         do {
             try WebAppPackageInstaller.uninstall(app)
+            if app.isRemote {
+                WebAppDataStoreIdentifier.removePersistentStore(for: app.id)
+            }
             refreshInstalledWebApps()
             operationMessage = "تم حذف \(app.name) وبياناته المحلية."
         } catch {

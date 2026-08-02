@@ -22,41 +22,29 @@ Storage resolution order planned for all three apps:
 | 3ERoomElectrical | `com.essam.3E.roomelectrical` | `electrical` | `Apps/RoomElectrical` |
 | 3ELocal | `com.essam.3E.localweb` | `localweb` | `Apps/LocalWeb` |
 
-## 3E Web App runtime
-
-`3ELocal 0.2.0-M01` supports installable local HTML5/JavaScript packages with the `.3eweb` extension.
-
-```text
-Apps/LocalWeb/
-├── Projects/          # Editable development folders
-├── InstalledApps/     # Versioned installed packages
-├── Packages/          # Optional package storage
-├── Downloads/         # Future online downloads
-├── Imports/
-├── Exports/
-├── Cache/
-└── Settings/
-```
-
-Each installed app receives a stable loopback port derived from its package identifier. This keeps its WebKit origin stable across launches and package updates, allowing `localStorage`, IndexedDB and cookies to remain associated with that app instead of a random server port.
-
-## Package safety rules
-
-- Only `.3eweb` and manually selected `.zip` archives are accepted by the importer.
-- Package size, expanded size and entry count are bounded.
-- Absolute paths, traversal components, null bytes and unsafe archive paths are rejected.
-- Symbolic links are rejected.
-- Native executable and installable file types are rejected.
-- `manifest.json` must use schema version 1 and a safe package identifier/version.
-- The entry page must be an existing `.html` or `.htm` file inside the package.
-- The package runtime requirement must not exceed the installed 3ELocal runtime.
-- Installation is staged before an active version is replaced.
-- App code versions are separated from persistent `Data` and `Documents` folders.
-
-## Existing safety rules
+## Safety rules
 
 - Deep links only contain relative paths.
 - Absolute paths, `..`, `.`, null bytes, and paths outside the selected root are rejected.
 - Registry updates preserve unknown application entries.
 - Registry writes are atomic.
 - The HTTP server resolves symlinks and verifies that the final file remains under the selected project root.
+
+## Web application runtime
+
+`Apps/LocalWeb/InstalledApps/<app-id>/` contains the installed application record and its persistent data.
+
+### Local `.3eweb` applications
+
+- Application files are stored under `Versions/<version>/`.
+- `Data`, `Documents`, `Cache` and `Backups` remain outside the version folder.
+- Each local app uses a stable loopback port derived from its identifier, preserving its browser origin during updates.
+
+### Remote HTTPS applications
+
+- The record stores the HTTPS start URL, custom metadata and navigation policy.
+- No website source files are downloaded during installation.
+- The start host is always allowed; optional declared domains may also remain inside the web view.
+- Disallowed user-activated links are handed to the system browser.
+- On iOS 17 and newer, each remote app uses a deterministic persistent `WKWebsiteDataStore` identifier.
+- On iOS 16, normal web-origin isolation applies through the default persistent data store.

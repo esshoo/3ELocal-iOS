@@ -1,19 +1,18 @@
 # Changelog
 
-## 0.2.0-M01
+## 0.2.0-M02 — Remote Web Apps
 
-- Added the first installable 3E Web Apps runtime while preserving the existing local project launcher.
-- Added `.3eweb` package import through the Files picker and document opening.
-- Added package validation for safe paths, archive size, entry count, symlinks, native executable types, manifest schema, app identity, runtime compatibility, entry page and icon.
-- Added versioned installation storage under `Apps/LocalWeb/InstalledApps`.
-- Added install, reinstall, update, uninstall and rollback operations.
-- App code versions are separated from persistent `Data` and `Documents` folders.
-- Added a dedicated Applications tab alongside the existing Projects tab.
-- Added stable per-app local HTTP ports so WebKit storage origins remain consistent across launches and updates.
-- Added ZIPFoundation 0.9.20 through Swift Package Manager.
-- Declared the custom `.3eweb` document type.
-- Added two Hello3E test packages for install/update/rollback and localStorage persistence tests.
-- Increased the app version to `0.2.0` and build number to `4`.
+- Added remote web applications that run from HTTPS URLs without downloading the website.
+- Added optional website metadata discovery from HTML and Web App Manifest files.
+- Added custom app name, description and icon selection.
+- Added local/remote filtering and online/offline badges in the application library.
+- Added per-app navigation policies: same host, declared domains or unrestricted.
+- Added external-link handoff to the system browser when navigation is blocked.
+- Added a persistent, isolated WebKit data store per remote app on iOS 17 and newer.
+- Added connection-error banners and offline recovery UI.
+- Added an application details screen with storage size, install/update dates and launch history.
+- Added reliable `.3eweb` intake from the Files app, including pending imports before the 3E folder reconnects.
+- Increased the internal build number to 5.
 
 ## 0.1.2
 

@@ -11,7 +11,13 @@ required=(
   Sources/Web/LocalHTTPServer.swift
   Sources/WebApps/WebAppManifest.swift
   Sources/WebApps/WebAppPackageInstaller.swift
+  Sources/WebApps/RemoteWebAppInstaller.swift
+  Sources/WebApps/RemoteWebAppMetadataFetcher.swift
+  Sources/Web/NetworkStatusMonitor.swift
+  Sources/Web/WebAppDataStoreIdentifier.swift
   Sources/UI/InstalledWebAppsView.swift
+  Sources/UI/RemoteWebAppEditorView.swift
+  Sources/UI/InstalledWebAppDetailsView.swift
   .github/workflows/build-unsigned-ipa.yml
   TestPackages/Hello3E-v1.0.0.3eweb
   TestPackages/Hello3E-v1.1.0.3eweb
@@ -44,7 +50,13 @@ for package in [Path('TestPackages/Hello3E-v1.0.0.3eweb'), Path('TestPackages/He
         assert manifest['type']=='local'
         assert manifest['entry'] in names
         assert manifest['icon'] in names
-print('Info.plist and sample packages OK')
+source = Path('Sources/WebApps/WebAppManifest.swift').read_text()
+assert 'case remote' in source
+assert 'NavigationPolicy' in source
+assert Path('M02-TEST-PLAN.md').exists()
+project = Path('project.yml').read_text()
+assert 'CURRENT_PROJECT_VERSION: 5' in project
+print('Info.plist, sample packages and M02 sources OK')
 PY
 
 swiftc -frontend -parse $(find Sources -name '*.swift' -print)
