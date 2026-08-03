@@ -67,3 +67,19 @@ Each milestone must preserve:
 - The fixed Bundle ID and URL scheme.
 - User project files and installed app data.
 - GitHub Actions unsigned IPA generation.
+
+
+## M05.1 — مكتمل في هذا الفرع
+
+- إدارة مفاتيح Ed25519 على الجهاز.
+- Keychain + Face ID.
+- صلاحية المفتاح والحزمة.
+- توقيع التطبيقات المثبتة وتصديرها.
+- استيراد محلي من Files وKeys/Inbox.
+
+## M05.2 — التالي
+
+- نقل `.3ekey` عبر جلسة وضع المطور على الشبكة المحلية باستخدام رمز اقتران مؤقت.
+- عدم قبول المفتاح إلا بعد تأكيد صريح على iPhone.
+- حذف نسخة النقل فور إدخالها إلى Keychain.
+- سجل تدقيق لعمليات إنشاء واستيراد واستخدام المفاتيح.

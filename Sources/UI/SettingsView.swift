@@ -31,6 +31,17 @@ struct SettingsView: View {
                     }
                 }
 
+                Section("مفاتيح التوقيع") {
+                    NavigationLink {
+                        SigningKeysView()
+                    } label: {
+                        Label("إدارة مفاتيح التوقيع", systemImage: "key.horizontal.fill")
+                    }
+                    Text("يمكن إنشاء مفتاح على الآيفون أو استيراده من Files أو من Apps/LocalWeb/Keys/Inbox. المفتاح الخاص يُحفظ داخل Keychain.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+
                 Section("أمان حزم 3E") {
                     Toggle("السماح بالحزم غير الموقعة (وضع المطور)", isOn: $storage.allowUnsignedPackages)
                     Label(

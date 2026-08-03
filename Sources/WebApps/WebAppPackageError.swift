@@ -34,6 +34,8 @@ enum WebAppPackageError: LocalizedError {
     case checksumMismatch(String)
     case unsignedExtraFile(String)
     case signatureDowngradeNotAllowed
+    case keyWasExpiredAtSigning
+    case packageSignatureExpired(Date)
 
     var errorDescription: String? {
         switch self {
@@ -103,6 +105,10 @@ enum WebAppPackageError: LocalizedError {
             return "تحتوي الحزمة الموقعة على ملف إضافي غير مشمول بالتوقيع: \(path)"
         case .signatureDowngradeNotAllowed:
             return "لا يمكن استبدال إصدار موثوق بحزمة غير موقعة أو بتوقيع مختلف."
+        case .keyWasExpiredAtSigning:
+            return "تم إنشاء التوقيع بعد انتهاء صلاحية المفتاح."
+        case .packageSignatureExpired(let date):
+            return "انتهت صلاحية هذه الحزمة الموقعة في \(date.formatted(date: .abbreviated, time: .shortened))."
         }
     }
 }

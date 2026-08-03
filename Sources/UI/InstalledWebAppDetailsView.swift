@@ -8,7 +8,9 @@ struct InstalledWebAppDetailsView: View {
     let rollback: () -> Void
     let uninstall: () -> Void
 
+    @EnvironmentObject private var storage: ThreeEStorageManager
     @Environment(\.dismiss) private var dismiss
+    @State private var showingSigner = false
 
     var body: some View {
         NavigationStack {
@@ -95,6 +97,12 @@ struct InstalledWebAppDetailsView: View {
                         Text(trustDescription)
                             .font(.caption)
                             .foregroundStyle(.secondary)
+
+                        Button {
+                            showingSigner = true
+                        } label: {
+                            Label("توقيع وتصدير من الآيفون", systemImage: "signature")
+                        }
                     }
                 }
 
@@ -130,6 +138,10 @@ struct InstalledWebAppDetailsView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("تم") { dismiss() }
                 }
+            }
+            .sheet(isPresented: $showingSigner) {
+                SignInstalledWebAppView(app: app)
+                    .environmentObject(storage)
             }
         }
     }

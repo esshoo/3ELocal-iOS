@@ -117,5 +117,7 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>يستخدم 3ELocal بصمة الوجه لحماية مفاتيح توقيع حزم 3E Web والموافقة على عمليات التوقيع.</string>
 </dict>
 </plist>

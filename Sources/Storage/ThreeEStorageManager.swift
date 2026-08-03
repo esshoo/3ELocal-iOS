@@ -46,6 +46,9 @@ final class ThreeEStorageManager: ObservableObject {
     var projectsURL: URL? { appFolderURL?.appendingPathComponent("Projects", isDirectory: true) }
     var installedWebAppsURL: URL? { appFolderURL?.appendingPathComponent("InstalledApps", isDirectory: true) }
     var packagesURL: URL? { appFolderURL?.appendingPathComponent("Packages", isDirectory: true) }
+    var signedPackagesURL: URL? { packagesURL?.appendingPathComponent("Signed", isDirectory: true) }
+    var signingKeysURL: URL? { appFolderURL?.appendingPathComponent("Keys", isDirectory: true) }
+    var signingKeysInboxURL: URL? { signingKeysURL?.appendingPathComponent("Inbox", isDirectory: true) }
     var downloadsURL: URL? { appFolderURL?.appendingPathComponent("Downloads", isDirectory: true) }
     var temporaryWebAppsURL: URL? { appFolderURL?.appendingPathComponent("Cache/WebAppInstaller", isDirectory: true) }
     var sharedURL: URL? { rootURL?.appendingPathComponent("Shared", isDirectory: true) }
@@ -526,6 +529,9 @@ final class ThreeEStorageManager: ObservableObject {
             "Apps/LocalWeb/Projects",
             "Apps/LocalWeb/InstalledApps",
             "Apps/LocalWeb/Packages",
+            "Apps/LocalWeb/Packages/Signed",
+            "Apps/LocalWeb/Keys",
+            "Apps/LocalWeb/Keys/Inbox",
             "Apps/LocalWeb/Downloads",
             "Apps/LocalWeb/Imports",
             "Apps/LocalWeb/Exports",
@@ -594,7 +600,7 @@ final class ThreeEStorageManager: ObservableObject {
                 localEntry["supportedExtensions"] = [
                     "html", "htm", "css", "js", "json", "wasm",
                     "svg", "png", "jpg", "jpeg", "gif", "webp",
-                    "mp3", "mp4", "webm", "zip", "3eweb"
+                    "mp3", "mp4", "webm", "zip", "3eweb", "3ekey", "pem"
                 ]
                 localEntry["lastRegisteredAt"] = ISO8601DateFormatter()
                     .string(from: Date())

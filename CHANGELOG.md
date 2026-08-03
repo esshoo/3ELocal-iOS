@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.2.0-M05.1 — On-device package signing
+
+- Added generation of Ed25519 publisher keys directly on iPhone.
+- Added import of `.3ekey` and PKCS#8 Ed25519 PEM keys from Files or `Apps/LocalWeb/Keys/Inbox`.
+- Private key material is transferred into iOS Keychain and optionally protected by Face ID/device passcode.
+- Added selectable key lifetimes: one day, 7 days, 30 days, one year, or lifetime.
+- Added optional signed-package validity independent from key lifetime.
+- Added signing and export of an installed local app to `Apps/LocalWeb/Packages/Signed`.
+- Added schema 2 checksums with signed time, key validity, and optional package expiration covered by the Ed25519 signature.
+- Added dynamic trust for public keys imported/generated on the device while preserving the bundled trusted-publisher list.
+- Deleting a private key preserves its public key so previously signed packages can still be verified.
+- Added Face ID purpose string and new key-management UI.
+- Build number increased to 8.
+
 ## 0.2.0-M04 — Trusted Packages and Keyboard Fix
 
 - أصلح بقاء لوحة مفاتيح رابط المتجر ومنع الخروج من الشاشة.

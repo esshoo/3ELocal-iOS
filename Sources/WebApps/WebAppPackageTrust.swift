@@ -63,6 +63,9 @@ struct WebAppChecksums: Codable {
     let schemaVersion: Int
     let appID: String
     let version: String
+    let signedAt: String?
+    let keyValidUntil: String?
+    let packageValidUntil: String?
     let files: [WebAppChecksumEntry]
 }
 
@@ -83,11 +86,11 @@ enum TrustedPublisherStore {
     }()
 
     static func publisher(id: String, keyID: String) -> (TrustedPublisher, TrustedPublisherKey)? {
-        guard let publisher = list.publishers.first(where: { $0.id == id }),
-              let key = publisher.keys.first(where: { $0.id == keyID }) else {
-            return nil
+        if let publisher = list.publishers.first(where: { $0.id == id }),
+           let key = publisher.keys.first(where: { $0.id == keyID }) {
+            return (publisher, key)
         }
-        return (publisher, key)
+        return LocalSigningKeyStore.shared.trustedPublisher(id: id, keyID: keyID)
     }
 }
 
@@ -164,10 +167,13 @@ enum WebAppPackageVerifier {
         } catch {
             throw WebAppPackageError.invalidChecksumsDocument
         }
-        guard checksums.schemaVersion == 1,
+        guard [1, 2].contains(checksums.schemaVersion),
               checksums.appID == manifest.id,
               checksums.version == manifest.version else {
             throw WebAppPackageError.signatureManifestMismatch
+        }
+        if checksums.schemaVersion >= 2 {
+            try validateSignatureDates(checksums)
         }
 
         try validateChecksums(checksums, packageRoot: packageRoot)
@@ -195,6 +201,35 @@ enum WebAppPackageVerifier {
             }
         }
         return actual
+    }
+
+
+    private static func validateSignatureDates(_ checksums: WebAppChecksums) throws {
+        guard let signedAtRaw = checksums.signedAt,
+              let signedAt = parseISO8601(signedAtRaw) else {
+            throw WebAppPackageError.invalidChecksumsDocument
+        }
+        if let keyValidUntilRaw = checksums.keyValidUntil {
+            guard let keyValidUntil = parseISO8601(keyValidUntilRaw),
+                  signedAt <= keyValidUntil else {
+                throw WebAppPackageError.keyWasExpiredAtSigning
+            }
+        }
+        if let packageValidUntilRaw = checksums.packageValidUntil {
+            guard let packageValidUntil = parseISO8601(packageValidUntilRaw) else {
+                throw WebAppPackageError.invalidChecksumsDocument
+            }
+            if Date() > packageValidUntil {
+                throw WebAppPackageError.packageSignatureExpired(packageValidUntil)
+            }
+        }
+    }
+
+    private static func parseISO8601(_ value: String) -> Date? {
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = fractional.date(from: value) { return date }
+        return ISO8601DateFormatter().date(from: value)
     }
 
     private static func validateChecksums(_ checksums: WebAppChecksums, packageRoot: URL) throws {
